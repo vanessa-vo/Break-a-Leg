@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Break A Leg</title>
+  <style>
+    :root {
+      --bg: #f5f0e8;
+      --card: #ffffff;
+      --soft: #f6f6f6;
+      --base: #fff4d6;
+      --text: #222222;
+      --muted: #6b6b6b;
+      --border: #d9d9d9;
+      --good-bg: #e7f3e8;
+      --good-text: #35633a;
+      --good-border: #c6dfc8;
+      --warn-bg: #f6e7e4;
+      --warn-text: #874640;
+      --warn-border: #e5c5c1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: min(720px, 100%);
+      margin: 0 auto;
+      background: var(--card);
+      padding: 30px;
+      border-radius: 18px;
+    }
+
+    h1 { text-align: center; margin-bottom: 8px; }
+    h2 { margin-top: 28px; }
+    .subtitle { text-align: center; color: var(--muted); margin-top: 0; }
+
+    .base-box {
+      background: var(--base);
+      padding: 18px;
+      border-radius: 12px;
+    }
+
+    .base-name { font-size: 18px; font-weight: 700; }
+    .base-macros { margin-top: 6px; color: #555; }
+
+    .topping {
+      background: var(--soft);
+      padding: 18px;
+      margin: 12px 0;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topping-info { min-width: 0; flex: 1; }
+    .topping-name { font-size: 17px; font-weight: 700; margin-bottom: 5px; }
+    .serving-info { color: var(--muted); font-size: 14px; margin-bottom: 4px; }
+    .topping-macros { color: #777; font-size: 13px; }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .quantity-button {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid #cfcfcf;
+      background: #fff;
+      color: var(--text);
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .quantity-button:hover:not(:disabled) { background: #ececec; }
+    .quantity-button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .quantity-number {
+      min-width: 24px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .macro-box {
+      background: #f3f5f2;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 26px;
+    }
+
+    .macro-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 12px 0;
+    }
+
+    .macro-number { font-size: 20px; font-weight: 700; }
+
+    .threshold-info {
+      border-top: 1px solid var(--border);
+      margin-top: 18px;
+      padding-top: 15px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .macro-status {
+      margin-top: 12px;
+      padding: 13px 15px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .macro-status.good {
+      background: var(--good-bg);
+      color: var(--good-text);
+      border: 1px solid var(--good-border);
+    }
+
+    .macro-status.warning {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border: 1px solid var(--warn-border);
+    }
+
+    .main-button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 25px;
+      border: 0;
+      border-radius: 10px;
+      background: #222;
+      color: #fff;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .main-button:hover { background: #444; }
+    #resultPage { display: none; }
+    li { margin-bottom: 12px; line-height: 1.5; }
+
+    @media (max-width: 560px) {
+      body { padding: 18px 10px; }
+      .container { padding: 20px; }
+      .topping { gap: 8px; }
+      .quantity-control { gap: 6px; }
+      .quantity-button { width: 38px; height: 38px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section id="selectionPage">
+      <h1>🥣 Break A Leg</h1>
+      <p class="subtitle">Build your perfect recovery porridge bowl.</p>
+
+      <h2>Base Porridge</h2>
+      <div class="base-box">
+        <div class="base-name">Shrimp Porridge</div>
+        <div class="base-macros">280 calories • 30 g protein</div>
+      </div>
+
+      <h2>Add Toppings</h2>
+      <div id="toppingsContainer"></div>
+
+      <div class="macro-box">
+        <h2 style="margin-top:0">Your Macros</h2>
+        <div class="macro-row">
+          <span>Calories</span>
+          <span><span id="liveCalories" class="macro-number">280</span> kcal</span>
+        </div>
+        <div class="macro-row">
+          <span>Protein</span>
+          <span><span id="liveProtein" class="macro-number">30.0</span> g</span>
+        </div>
+        <div class="threshold-info">Recommended target: ≤ 400 kcal • ≥ 30 g protein</div>
+        <div id="macroStatus" class="macro-status good">✓ Within your target range</div>
+      </div>
+
+      <button id="buildButton" class="main-button" type="button">Make My Porridge</button>
+    </section>
+
+    <section id="resultPage">
+      <h1>🥣 Your Break A Leg Bowl</h1>
+
+      <h2>Final Macros</h2>
+      <div class="macro-box">
+        <div class="macro-row">
+          <span>Calories</span>
+          <span><span id="finalCalories" class="macro-number">0</span> kcal</span>
+        </div>
+        <div class="macro-row">
+          <span>Protein</span>
+          <span><span id="finalProtein" class="macro-number">0</span> g</span>
+        </div>
+        <div class="threshold-info">Recommended target: ≤ 400 kcal • ≥ 30 g protein</div>
+        <div id="finalMacroStatus" class="macro-status"></div>
+      </div>
+
+      <h2>Ingredients</h2>
+      <ul id="ingredientList"></ul>
+
+      <h2>Cooking Instructions</h2>
+      <ol id="instructionList"></ol>
+
+      <button id="startOverButton" class="main-button" type="button">Make Another Porridge</button>
+    </section>
+  </main>
+
+  <script>
+    const calorieTarget = 400;
+    const proteinTarget = 30;
+
+    const basePorridge = {
+      name: "Shrimp Porridge",
+      calories: 280,
+      protein: 30,
+      ingredient: "1 container of pre-made shrimp porridge"
+    };
+
+    const toppings = [
+      {
+        id: "caramelizedFish",
+        name: "Caramelized Fish",
+        serving: "1 serving",
+        amountPerServing: 1,
+        unit: "serving",
+        calories: 85,
+        protein: 10,
+        max: 1
+      },
+      {
+        id: "saltedDuckEgg",
+        name: "Salted Duck Egg",
+        serving: "1/2 egg",
+        amountPerServing: 0.5,
+        unit: "egg",
+        calories: 50,
+        protein: 4,
+        max: 2
+      },
+      {
+        id: "centuryEgg",
+        name: "Century Egg",
+        serving: "1/2 egg",
+        amountPerServing: 0.5,
+        unit: "egg",
+        calories: 40,
+        protein: 4,
+        max: 2
+      },
+      {
+        id: "friedGarlic",
+        name: "Fried Garlic",
+        serving: "2 g",
+        amountPerServing: 2,
+        unit: "g",
+        calories: 10,
+        protein: 0,
+        max: 2
+      },
+      {
+        id: "friedShallots",
+        name: "Fried Shallots",
+        serving: "2 g",
+        amountPerServing: 2,
+        unit: "g",
+        calories: 15,
+        protein: 0,
+        max: 2
+      },
+      {
+        id: "beanSprouts",
+        name: "Bean Sprouts",
+        serving: "50 g",
+        amountPerServing: 50,
+        unit: "g",
+        calories: 15,
+        protein: 1.5,
+        max: 2
+      },
+      {
+        id: "cilantro",
+        name: "Cilantro",
+        serving: "2 branches",
+        amountPerServing: 2,
+        unit: "branch",
+        calories: 0,
+        protein: 0,
+        max: null
+      },
+      {
+        id: "greenOnion",
+        name: "Green Onion",
+        serving: "1 branch",
+        amountPerServing: 1,
+        unit: "branch",
+        calories: 0,
+        protein: 0,
+        max: null
+      }
+    ];
+
+    const quantities = {};
+    toppings.forEach((topping) => {
+      quantities[topping.id] = 0;
+    });
+
+    const toppingsContainer = document.getElementById("toppingsContainer");
+
+    toppings.forEach((topping) => {
+      const card = document.createElement("div");
+      card.className = "topping";
+
+      card.innerHTML = `
+        <div class="topping-info">
+          <div class="topping-name">${topping.name}</div>
+          <div class="serving-info">1 serving = ${topping.serving}</div>
+          <div class="topping-macros">${topping.calories} cal • ${topping.protein} g protein</div>
+        </div>
+        <div class="quantity-control">
+          <button class="quantity-button minus-button" type="button" aria-label="Remove one serving">−</button>
+          <span class="quantity-number">0</span>
+          <button class="quantity-button plus-button" type="button" aria-label="Add one serving">+</button>
+        </div>
+      `;
+
+      const minusButton = card.querySelector(".minus-button");
+      const plusButton = card.querySelector(".plus-button");
+      const quantityNumber = card.querySelector(".quantity-number");
+
+      minusButton.disabled = true;
+
+      minusButton.addEventListener("click", () => changeQuantity(topping, -1, minusButton, plusButton, quantityNumber));
+      plusButton.addEventListener("click", () => changeQuantity(topping, 1, minusButton, plusButton, quantityNumber));
+
+      topping.card = card;
+      topping.minusButton = minusButton;
+      topping.plusButton = plusButton;
+      topping.quantityNumber = quantityNumber;
+
+      toppingsContainer.appendChild(card);
+    });
+
+    function changeQuantity(topping, change, minusButton, plusButton, quantityNumber) {
+      let next = quantities[topping.id] + change;
+
+      if (next < 0) next = 0;
+      if (topping.max !== null && next > topping.max) next = topping.max;
+
+      quantities[topping.id] = next;
+      quantityNumber.textContent = String(next);
+      minusButton.disabled = next === 0;
+      plusButton.disabled = topping.max !== null && next >= topping.max;
+
+      updateMacros();
+    }
+
+    function getQuantity(id) {
+      return quantities[id] || 0;
+    }
+
+    function calculateMacros() {
+      let calories = basePorridge.calories;
+      let protein = basePorridge.protein;
+
+      toppings.forEach((topping) => {
+        const quantity = getQuantity(topping.id);
+        calories += topping.calories * quantity;
+        protein += topping.protein * quantity;
+      });
+
+      return { calories, protein };
+    }
+
+    function setMacroStatus(statusElement, macros) {
+      const caloriesOkay = macros.calories <= calorieTarget;
+      const proteinOkay = macros.protein >= proteinTarget;
+
+      if (caloriesOkay && proteinOkay) {
+        statusElement.className = "macro-status good";
+        statusElement.textContent = "✓ Within your target range";
+        return;
+      }
+
+      statusElement.className = "macro-status warning";
+
+      if (!caloriesOkay && proteinOkay) {
+        statusElement.textContent = `Calories are above your ${calorieTarget} kcal target.`;
+      } else if (caloriesOkay && !proteinOkay) {
+        statusElement.textContent = `Protein is below your ${proteinTarget} g target.`;
+      } else {
+        statusElement.textContent = `Calories are above ${calorieTarget} kcal and protein is below ${proteinTarget} g.`;
+      }
+    }
+
+    function updateMacros() {
+      const macros = calculateMacros();
+      document.getElementById("liveCalories").textContent = String(macros.calories);
+      document.getElementById("liveProtein").textContent = macros.protein.toFixed(1);
+      setMacroStatus(document.getElementById("macroStatus"), macros);
+    }
+
+    function getTotalAmount(topping, quantity) {
+      const total = topping.amountPerServing * quantity;
+
+      if (topping.unit === "egg") {
+        if (total === 0.5) return "1/2 egg";
+        if (total === 1) return "1 egg";
+        return `${total} eggs`;
+      }
+
+      if (topping.unit === "branch") {
+        if (total === 1) return "1 branch";
+        return `${total} branches`;
+      }
+
+      if (topping.unit === "g") return `${total} g`;
+
+      if (topping.unit === "serving") {
+        if (total === 1) return "1 serving";
+        return `${total} servings`;
+      }
+
+      return String(total);
+    }
+
+    function addListItem(listId, text) {
+      const item = document.createElement("li");
+      item.textContent = text;
+      document.getElementById(listId).appendChild(item);
+    }
+
+    function buildPorridge() {
+      const ingredientList = document.getElementById("ingredientList");
+      const instructionList = document.getElementById("instructionList");
+      ingredientList.innerHTML = "";
+      instructionList.innerHTML = "";
+
+      const macros = calculateMacros();
+      document.getElementById("finalCalories").textContent = String(macros.calories);
+      document.getElementById("finalProtein").textContent = macros.protein.toFixed(1);
+      setMacroStatus(document.getElementById("finalMacroStatus"), macros);
+
+      addListItem("ingredientList", basePorridge.ingredient);
+
+      toppings.forEach((topping) => {
+        const quantity = getQuantity(topping.id);
+        if (quantity > 0) {
+          addListItem("ingredientList", `${topping.name}: ${getTotalAmount(topping, quantity)}`);
+        }
+      });
+
+      const beanSprouts = getQuantity("beanSprouts");
+      if (beanSprouts > 0) {
+        addListItem("instructionList", `Blanch ${beanSprouts * 50} g of bean sprouts first.`);
+        addListItem("instructionList", "Place the blanched bean sprouts at the bottom of your serving bowl.");
+      }
+
+      addListItem("instructionList", "Place the pre-made shrimp porridge in a pot and heat it.");
+      addListItem("instructionList", "If the porridge is too thick, add approximately 50–100 ml of water.");
+      addListItem("instructionList", "Stir while heating until the porridge is hot and reaches your preferred consistency.");
+
+      if (beanSprouts > 0) {
+        addListItem("instructionList", "Pour the heated porridge over the bean sprouts in the serving bowl.");
+      } else {
+        addListItem("instructionList", "Pour the heated porridge into your serving bowl.");
+      }
+
+      if (getQuantity("caramelizedFish") > 0) {
+        addListItem("instructionList", "Microwave 1 serving of caramelized fish for approximately 1–2 minutes, then place it on top of the porridge.");
+      }
+
+      const saltedEgg = getQuantity("saltedDuckEgg");
+      if (saltedEgg === 1) {
+        addListItem("instructionList", "Peel the salted duck egg, cut it in half, and place 1 half on top of the porridge.");
+      } else if (saltedEgg === 2) {
+        addListItem("instructionList", "Peel the salted duck egg, cut it in half, and place both halves on top of the porridge.");
+      }
+
+      const centuryEgg = getQuantity("centuryEgg");
+      if (centuryEgg === 1) {
+        addListItem("instructionList", "Peel the century egg, cut it in half, and place 1 half on top of the porridge.");
+      } else if (centuryEgg === 2) {
+        addListItem("instructionList", "Peel the century egg, cut it in half, and place both halves on top of the porridge.");
+      }
+
+      const greenOnionServings = getQuantity("greenOnion");
+      if (greenOnionServings > 0) {
+        const branches = greenOnionServings;
+        addListItem("instructionList", `Cut ${branches === 1 ? "1 branch" : `${branches} branches`} of green onion into small pieces, then sprinkle on top of the porridge.`);
+      }
+
+      const cilantroServings = getQuantity("cilantro");
+      if (cilantroServings > 0) {
+        const branches = cilantroServings * 2;
+        addListItem("instructionList", `Cut ${branches === 1 ? "1 branch" : `${branches} branches`} of cilantro into small pieces, then sprinkle on top of the porridge.`);
+      }
+
+      const shallots = getQuantity("friedShallots");
+      if (shallots > 0) {
+        addListItem("instructionList", `Sprinkle ${shallots * 2} g of fried shallots on top.`);
+      }
+
+      const garlic = getQuantity("friedGarlic");
+      if (garlic > 0) {
+        addListItem("instructionList", `Sprinkle ${garlic * 2} g of fried garlic on top.`);
+      }
+
+      document.getElementById("selectionPage").style.display = "none";
+      document.getElementById("resultPage").style.display = "block";
+      window.scrollTo(0, 0);
+    }
+
+    function startOver() {
+      toppings.forEach((topping) => {
+        quantities[topping.id] = 0;
+        topping.quantityNumber.textContent = "0";
+        topping.minusButton.disabled = true;
+        topping.plusButton.disabled = false;
+      });
+
+      updateMacros();
+      document.getElementById("resultPage").style.display = "none";
+      document.getElementById("selectionPage").style.display = "block";
+      window.scrollTo(0, 0);
+    }
+
+    document.getElementById("buildButton").addEventListener("click", buildPorridge);
+    document.getElementById("startOverButton").addEventListener("click", startOver);
+
+    updateMacros();
+  </script>
+</body>
+</html>
